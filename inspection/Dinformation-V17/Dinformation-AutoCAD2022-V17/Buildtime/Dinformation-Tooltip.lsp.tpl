@@ -416,18 +416,9 @@
   nil
 )
 
-(defun dcad-dinformation-getinfo (x y z / hit ent result)
-  (setq hit
-    (vl-catch-all-apply
-      'nentselp
-      (list (trans (list x y z) 0 1))))
-  (if (vl-catch-all-error-p hit)
-    (setq hit nil))
-  (setq ent
-    (if (and hit
-             (= (type (last (last hit))) 'ename))
-      (last (last hit))
-      (if hit (car hit) nil)))
+; A single reader/rollover highlighter shared by the native-pick and
+; nentselp-fallback paths. No database modifications are performed.
+(defun dcad-dinf-entity-info (ent / result kind layer handle)
   (cond
     ((not ent)
       (dcad-dinf-clear-highlight)
@@ -439,14 +430,44 @@
       (setq *dcad-dinf-last-entity* ent)
       (vl-catch-all-apply 'redraw (list ent 3))
       (setq result (vl-catch-all-apply 'dcad-dinf-dis (list ent)))
-      (if (vl-catch-all-error-p result)
-        (setq *dcad-dinf-last-info*
-          (list (dcad-dinf-t "TypeUnknown")
-                (strcat (dcad-dinf-label "LabelLayer")
-                        (if (dcad-dinf-dxf ent 8) (dcad-dinf-dxf ent 8) ""))))
-        (setq *dcad-dinf-last-info* result))
-      *dcad-dinf-last-info*)
+      (if (or (vl-catch-all-error-p result) (not result))
+        (progn
+          ; Some object types/proxies do not expose every ActiveX property.
+          ; Report their actual DXF type/identity instead of a blank tooltip.
+          (setq kind (dcad-dinf-dxf ent 0)
+                layer (dcad-dinf-dxf ent 8)
+                handle (dcad-dinf-dxf ent 5))
+          (setq result
+            (list
+              (strcat (dcad-dinf-t "TypeUnknown") " [" (if kind kind "?") "]")
+              (strcat (dcad-dinf-label "LabelLayer") (if layer layer ""))
+              (strcat (dcad-dinf-label "LabelHandle") (if handle handle ""))))))
+      (setq *dcad-dinf-last-info* result)
+      result)
   )
+)
+
+(defun dcad-dinformation-getinfo-handle (handle / ent)
+  (setq ent
+    (if (and handle (= (type handle) 'STR))
+      (vl-catch-all-apply 'handent (list handle))))
+  (if (vl-catch-all-error-p ent) (setq ent nil))
+  (dcad-dinf-entity-info ent)
+)
+
+(defun dcad-dinformation-getinfo (x y z / hit ent)
+  (setq hit
+    (vl-catch-all-apply
+      'nentselp
+      (list (trans (list x y z) 0 1))))
+  (if (vl-catch-all-error-p hit)
+    (setq hit nil))
+  (setq ent
+    (if (and hit
+             (= (type (last (last hit))) 'ename))
+      (last (last hit))
+      (if hit (car hit) nil)))
+  (dcad-dinf-entity-info ent)
 )
 
 (defun dcad-dinformation-reset ()
@@ -455,6 +476,7 @@
 )
 
 (vl-acad-defun 'dcad-dinformation-getinfo)
+(vl-acad-defun 'dcad-dinformation-getinfo-handle)
 (vl-acad-defun 'dcad-dinformation-reset)
 
 (setq *dcad-dinf-loaded* T)
