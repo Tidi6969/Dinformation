@@ -1,0 +1,44 @@
+name: Build AutoCAD 2022 source candidate from V17 baseline
+on:
+  push:
+    branches:
+      - fix/autocad2022-source-candidate
+permissions:
+  contents: read
+jobs:
+  release-build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply only AutoCAD 2022 patch to original V17 ZIP
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Expand-Archive -LiteralPath 'V17/Dinformation-V17.zip' -DestinationPath 'stage' -Force
+          $root = 'Dinformation-V17/Dinformation-AutoCAD2022-V17'
+          foreach ($file in @('src/Information/InformationSession.cs','src/Core/LispInfoEngine.cs','Buildtime/Dinformation-Tooltip.lsp.tpl')) {
+            $from = Join-Path 'AutoCAD2022-Patch' $file
+            $to = Join-Path 'stage' (Join-Path $root $file)
+            if (!(Test-Path -LiteralPath $from) -or !(Test-Path -LiteralPath $to)) { throw "Missing patch file: $file" }
+            Copy-Item -LiteralPath $from -Destination $to -Force
+          }
+      - name: Build Release x64 on Windows with original Autodesk 2022 SDK
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $project = Join-Path 'stage' 'Dinformation-V17/Dinformation-AutoCAD2022-V17'
+          Push-Location $project
+          & cmd.exe /c 'Build_Release.cmd /nopause'
+          $exitCode = $LASTEXITCODE
+          Pop-Location
+          if ($exitCode -ne 0) { throw "AutoCAD2022 build failed: $exitCode" }
+          if (!(Test-Path 'stage/Dinformation-V17/Dinformation-AutoCAD2022-V17/bin/DinformationC22.dll')) { throw 'Build returned success but DLL missing' }
+      - name: Attach test DLL and compiler log (not a release)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dinformation-autocad2022-source-candidate
+          path: |
+            stage/Dinformation-V17/Dinformation-AutoCAD2022-V17/log/
+            stage/Dinformation-V17/Dinformation-AutoCAD2022-V17/bin/DinformationC22.dll
+          if-no-files-found: warn
