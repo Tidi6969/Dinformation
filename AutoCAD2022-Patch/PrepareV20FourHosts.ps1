@@ -30,19 +30,19 @@ $targets=@(
   @{host='GstarCAD2027'; ver='V17'; dll='DinformationG27.dll'}
 )
 foreach($t in $targets){
-  $host=$t.host;$ver=$t.ver
-  $src=if($host -eq 'AutoCAD2022'){Join-Path $new ('Dinformation-'+$host+'-V19')}else{Join-Path (Join-Path $old 'Dinformation-V17') ('Dinformation-'+$host+'-V17')}
-  $dst=Join-Path $pkg ('Dinformation-'+$host+'-V20')
+  $targetName=$t.host;$ver=$t.ver
+  $src=if($targetName -eq 'AutoCAD2022'){Join-Path $new ('Dinformation-'+$targetName+'-V19')}else{Join-Path (Join-Path $old 'Dinformation-V17') ('Dinformation-'+$targetName+'-V17')}
+  $dst=Join-Path $pkg ('Dinformation-'+$targetName+'-V20')
   if(!(Test-Path $src)){throw ('Missing source '+$src)}
   Copy-Item -LiteralPath $src -Destination $dst -Recurse -Force
   # Preserve source of the three other hosts byte-for-byte; version metadata only.
-  if($host -ne 'AutoCAD2022'){
+  if($targetName -ne 'AutoCAD2022'){
     $files=@(Get-ChildItem -LiteralPath (Join-Path $src 'src') -Recurse -File)
     foreach($f in $files){
       $rel=$f.FullName.Substring($src.Length+1)
       $other=Join-Path $dst $rel
       if(!(Test-Path $other) -or (Get-FileHash $f.FullName -Algorithm SHA256).Hash -ne (Get-FileHash $other -Algorithm SHA256).Hash){
-        throw ('Host source changed '+$host+'/'+$rel)
+        throw ('Host source changed '+$targetName+'/'+$rel)
       }
     }
   }
