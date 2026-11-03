@@ -21,9 +21,7 @@ namespace DCAD.Dinformation.Information
         // round trip on every pixel of mouse motion.
         private ObjectId _lastPickedId = ObjectId.Null;
         private string _lastTooltip = string.Empty;
-        private DateTime _lastFallback = DateTime.MinValue;
         private bool _monitorActive;
-        private const double FallbackIntervalMs = 50.0;
 
         public InformationSession(Document document)
         {
@@ -36,7 +34,7 @@ namespace DCAD.Dinformation.Information
             ResetLispState();
             Subscribe();
             EnableForcedPick();
-            RuntimeLog.Info("Command session started. Drawing=" + (_document.Name ?? string.Empty) + "; Recognition=LISP nentselp/dis; Display=NativePointMonitorTooltip");
+            RuntimeLog.Info("Command session started. Drawing=" + (_document.Name ?? string.Empty) + "; Recognition=AutoCAD native pick + LISP fallback; Display=NativePointMonitorTooltip");
 
             try
             {
@@ -74,7 +72,6 @@ namespace DCAD.Dinformation.Information
                         {
                             ObjectId[] ids = path.GetObjectIds();
                             if (ids == null || ids.Length == 0) continue;
-    
                             // GC2018 nentselp selects the outer INSERT for a nested
                             // hit, so preserve that behavior rather than inspecting
                             // a hidden block-definition child.
@@ -86,7 +83,6 @@ namespace DCAD.Dinformation.Information
                             }
                         }
                     }
-    
                 }
                 catch (System.Exception pickError)
                 {
@@ -107,17 +103,16 @@ namespace DCAD.Dinformation.Information
                     }
 
                     if (!string.IsNullOrWhiteSpace(_lastTooltip))
+                    {
                         e.AppendToolTipText(_lastTooltip);
-                    return;
+                        return;
+                    }
                 }
 
-                // Some graphics/proxy entities do not appear in the native pick
-                // array. Keep nentselp as a fallback, but cap its polling rate.
-                _lastPickedId = ObjectId.Null;
-                if ((DateTime.UtcNow - _lastFallback).TotalMilliseconds < FallbackIntervalMs)
-                    return;
-
-                _lastFallback = DateTime.UtcNow;
+                // Native picking is not guaranteed to include every custom,
+                // proxy or nested entity. Never suppress the baseline LISP
+                // picker when it is the only recognition path available.
+                if (picked.IsNull) _lastPickedId = ObjectId.Null;
                 _lastTooltip = LispInfoEngine.GetTooltipText(e.Context.RawPoint);
                 if (!string.IsNullOrWhiteSpace(_lastTooltip))
                     e.AppendToolTipText(_lastTooltip);
