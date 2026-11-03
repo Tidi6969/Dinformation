@@ -1,8 +1,6 @@
 name: Inspect archived DINFORMATION source (working branch)
 on:
-  push:
-    branches:
-      - dcad/dinformation-autocad2022-fix
+  workflow_dispatch:
 permissions:
   contents: write
 jobs:
