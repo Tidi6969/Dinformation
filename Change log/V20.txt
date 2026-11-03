@@ -1,0 +1,12 @@
+DINFORMATION V20
+Baseline=V19
+VersionRule=STD-17 max+1
+CADTargets=AutoCAD2022,AutoCAD2025,GstarCAD2018,GstarCAD2027
+Reason=Restore 3 CAD branches omitted by packaging, not requested to delete.
+ChangedCode=AutoCAD2022 (from V19), other 3 host src identical to V17.
+BuildStatus=PASS (each host independently built with its own SDK)
+RuntimeStatus=NotVerified
+NETLOAD=NotVerified
+ReleaseApproved=NO
+ArchiveSHA256=72A695E0D853B18B2E5FEABFACDA7757DDA9B2967AA6A25BF828DBC53CF461A9
+ArchiveSize=16329018

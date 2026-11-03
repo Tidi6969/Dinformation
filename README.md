@@ -1,9 +1,10 @@
 # Dinformation
-
-Latest saved: **V19 — source/build candidate pending AutoCAD 2022 test**, baseline V18.
-Target: AutoCAD 2022 ONLY. Build PASS (.NET Framework 4.8, Autodesk SDK 24.1); NETLOAD/Runtime/Standards NotVerified; RELEASE_APPROVED=NO.
-Stable/accepted version: Not confirmed.
-Download candidate for CAD runtime testing: [Dinformation-V19.zip](V19/Dinformation-V19.zip)
-Change log: [V19](Change%20log/V19.txt)
-V18 baseline: [Dinformation-V18.zip](V18/Dinformation-V18.zip) (unchanged).
-GstarCAD 2018, AutoCAD 2025 and GstarCAD 2027 original branches remain in archived V17; they were not rebuilt for V18 or V19.
+Latest saved: **V20 — four-host source/build candidate**, baseline V19.
+[Download Dinformation-V20.zip](V20/Dinformation-V20.zip)
+[Changelog V20](Change%20log/V20.txt)
+CAD branches: AutoCAD2022, AutoCAD2025, GstarCAD2018, GstarCAD2027.
+Only the AutoCAD2022 recognition source was modified; the other 3 hosts'
+functional code is identical to V17. All 4 rebuilt using separate SDKs.
+Build PASS; NETLOAD/Runtime/Standards NotVerified; ReleaseApproved=NO.
+CAD acceptance: Chua xac nhan.
+Historical V17/V18/V19 ZIPs and changelogs remain available.
