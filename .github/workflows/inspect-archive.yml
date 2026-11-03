@@ -20,7 +20,7 @@ jobs:
           from zipfile import ZipFile
           archive = Path('V17/Dinformation-V17.zip')
           target = Path('inspection')
-          allowed = {'.cs','.lsp','.fas','.dcl','.csproj','.sln','.cmd','.bat','.xml','.json','.config','.txt','.md','.resx','.props','.targets','.ps1','.set','.ini'}
+          allowed = {'.cs','.lsp','.tpl','.dat','.fas','.dcl','.csproj','.sln','.cmd','.bat','.xml','.json','.config','.txt','.md','.resx','.props','.targets','.ps1','.set','.ini'}
           target.mkdir(exist_ok=True)
           found = []
           with ZipFile(archive) as z:
