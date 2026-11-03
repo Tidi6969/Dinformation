@@ -1,0 +1,13 @@
+Dinformation GstarCAD 2027 V17
+PackageVersion=V17
+Assembly=DinformationG27.dll
+TargetFramework=net8.0-windows
+Output=bin\DinformationG27.dll
+FinalRuntime=Dprogram\DinformationG27.dll
+Language=embedded Buildtime\Language\lang.dat
+MIS_SET=external DUser\MIS_SET.SET only
+
+DataPathStandard=DCAD-DATA-001
+SupportPathSource=CAD ACADPREFIX via host adapter
+DUserRule=direct DUser or registered root\DUser; no sibling inference
+RuntimeLog=%TEMP%\DCAD\Dinformation\log

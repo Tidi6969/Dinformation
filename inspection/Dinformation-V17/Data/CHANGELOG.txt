@@ -1,0 +1,19 @@
+Dinformation V17
+- AutoCAD 2022/2025 and GstarCAD 2027 now use the GC2018-style AutoLISP recognition/data-reader pipeline.
+- .NET PointMonitor supplies only the cursor WCS point and appends LISP-returned lines to the existing native tooltip; it no longer selects entity IDs or reads object properties.
+- LISP uses nentselp, the same nested-entity extraction rule as the GC2018 LISP, compare-old/new, redraw highlight, and the GC2018 dis()/ActiveX property reader.
+- Removed the .NET ObjectInformationService/TooltipFormatter from the three migrated hosts.
+- Added handle to the LISP tooltip header and added TEXT/MTEXT content lines; MTEXT content is now returned by the LISP reader.
+- The GC2018 overlay drawing path is not used by AutoCAD/GC2027; existing tooltip presentation is retained.
+- Added per-command temporary ASCII LISP generation, Unicode escape decoding for tooltip output, and cleanup.
+- GstarCAD 2018 behavior remains the reference implementation; only package/assembly version metadata advances.
+- Retained V16 DCAD-DATA-001 resolver, multilingual catalog and build/package layout.
+- Build/NETLOAD/runtime validation not performed in this environment.
+
+Dinformation V16
+- Applied DCAD-DATA-001 to runtime path/data handling.
+- Added shared DcadDataPathResolver with per-host Support Path adapters.
+- Removed sibling DUser inference from DData/DProgram/DHelp/Dicon.
+- AutoCAD Support Path source is ACADPREFIX; removed ACAD/COM-first path logic.
+- MIS_SET.SET remains read-only in DUser; duplicates log CONFLICT; missing/invalid falls back to English.
+- Runtime diagnostics moved out of DProgram to %TEMP%\DCAD\Dinformation\log.

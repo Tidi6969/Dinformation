@@ -1,0 +1,12 @@
+Dinformation V17 runtime data manifest
+- Buildtime/Language/lang.dat = embedded six-language resource; never searched in Support Path
+- DUser/MIS_SET.SET = external shared language selector; READ ONLY; line 28 only
+- DUser resolution = direct registered DUser OR registered root\DUser only
+- No sibling inference: registered DData/DProgram/DHelp/Dicon never implies DUser
+- If multiple DUser/MIS_SET.SET files exist, first by CAD Support File Search Path order is used and CONFLICT is logged
+- If MIS_SET.SET is missing, inaccessible, missing line 28 or invalid, language falls back to Lang_0 (English); file is never created/repaired/rewritten
+- Runtime path resolver Find operations never create folders/files
+- Runtime technical diagnostics = %TEMP%\DCAD\Dinformation\log
+- Userdata/24.0_(IDD)-object-information.LSP = maintenance/reference source only; never read at runtime
+- Reference SDK DLLs are build-only and are never copied to Dprogram
+- Dinformation has no DData business data files in V17

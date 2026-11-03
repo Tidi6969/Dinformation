@@ -1,0 +1,36 @@
+Dinformation V17 - DCAD-DATA-001 APPLIED SCOPE
+
+Implemented in source:
+- One shared DcadDataPathResolver algorithm in all four host trees.
+- Per-host CadSupportPathProvider adapter.
+- AutoCAD 2022/2025 adapter source: ACADPREFIX only.
+- GstarCAD 2018/2027 adapter source: host GetSystemVariable("ACADPREFIX"); no Autodesk namespace reuse.
+- Support Path normalization preserves CAD order and removes duplicates.
+- DUser resolution supports:
+  A) direct registered ...\DUser
+  B) registered root ...\ containing an existing DUser child
+- Forbidden sibling inference:
+  registered ...\DData / DProgram / DHelp / Dicon never implies ...\DUser.
+- Find operations do not create folder/file.
+- MIS_SET.SET is read only from DUser, line 28.
+- Multiple matches: first by Support Path order, log CONFLICT with all matches.
+- Missing/invalid/inaccessible MIS_SET.SET: fallback embedded Lang_0 English; never repair/write MIS_SET.SET.
+- MIS_SET line reader is BOM-aware for UTF-8/UTF-16 and ASCII-compatible for legacy ANSI/UTF-8-no-BOM numeric line 28.
+- Per-command path resolution is refreshed; no process-lifetime path/not-found cache.
+- Runtime path diagnostics include CAD host, profile when readable, Support Path list, DUser candidates, selected file and status.
+- Runtime technical log is %TEMP%\DCAD\Dinformation\log; no runtime write beside DLL/DProgram.
+
+Static package checks performed in this environment:
+- 4 csproj XML files parse.
+- 4 AssemblyInfo files are 17.0.0.0.
+- All four lang.dat files have identical SHA-256.
+- All four DcadDataPathResolver.cs files have identical SHA-256.
+- No source match for GetSystemVariable("ACAD"), COM GetVariable("ACAD"), or Directory.GetParent(supportPath) sibling inference.
+- GstarCAD 2018 classic csproj explicitly includes the new resolver/provider sources.
+
+Not verified here:
+- Windows compile/MSBuild.
+- NETLOAD on CAD hosts.
+- DCAD-DATA-001 runtime test matrix P01-P16 on real AutoCAD/GstarCAD.
+
+V17 functional-engine change does not alter DCAD-DATA-001 behavior.

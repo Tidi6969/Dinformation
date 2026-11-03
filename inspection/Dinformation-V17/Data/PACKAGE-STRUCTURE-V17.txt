@@ -1,0 +1,12 @@
+Dinformation-V17
+|- Dinformation-AutoCAD2022-V17
+|- Dinformation-AutoCAD2025-V17
+|- Dinformation-GstarCAD2018-V17
+|- Dinformation-GstarCAD2027-V17
+|- Dprogram
+|- Data
+|- log                 (created by Build_All.cmd)
+`- Build_All.cmd
+
+Migrated hosts embed Buildtime\Dinformation-Tooltip.lsp.tpl.
+GstarCAD 2018 retains Buildtime\Dinformation-GstarCAD2018.lsp.tpl.

@@ -1,0 +1,22 @@
+Dinformation V17 RELEASE MANIFEST - SOURCE CANDIDATE
+
+Build command: Build_All.cmd
+Final runtime folder after a successful build: Dprogram
+
+Host DLL mapping:
+- AutoCAD 2022  -> DinformationC22.dll
+- AutoCAD 2025  -> DinformationC25.dll
+- GstarCAD 2018 -> DinformationG18.dll
+- GstarCAD 2027 -> DinformationG27.dll
+
+AutoCAD 2022/2025 and GstarCAD 2027 use the LISP nentselp/dis recognition and property reader; .NET preserves the existing native tooltip display only.
+GstarCAD 2018 remains the reference launcher + temporary LISP implementation.
+
+Each host remains an independent source/build tree with its own Reference folder.
+Reference SDK DLLs are never copied to Dprogram.
+Runtime language selector is DUser\MIS_SET.SET only.
+Runtime path resolution follows DCAD-DATA-001: current CAD Support Path order, direct DUser or root\DUser only, no sibling inference.
+Dinformation never creates/repairs MIS_SET.SET.
+Runtime technical logs are written to %TEMP%\DCAD\Dinformation\log, not DProgram.
+
+Build/NETLOAD/runtime status: NOT VERIFIED in this environment.

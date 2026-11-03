@@ -1,0 +1,10 @@
+Dinformation-V17 BUILD STATUS
+Result        : NOT BUILT - SOURCE CANDIDATE
+Static QA      : PASS (C# lexical/brace, csproj XML, 6-language key parity, ASCII LISP template, bootstrap and CRLF CMD checks)
+AutoCAD 2022  : NOT RUN
+AutoCAD 2025  : NOT RUN
+GstarCAD 2018 : NOT RUN
+GstarCAD 2027 : NOT RUN
+NETLOAD       : NOT VERIFIED
+Runtime hover : NOT VERIFIED
+Reason        : This environment has no Windows MSBuild/.NET SDK and no CAD host executables.

@@ -1,0 +1,31 @@
+Dinformation V17 STATIC QA
+
+Source changes:
+- AutoCAD 2022/2025 and GstarCAD 2027 sessions use PointMonitor only as a cursor-coordinate source and tooltip transport.
+- No GetPickedEntities call remains in the migrated sessions.
+- No ObjectInformationService or TooltipFormatter remains in the migrated host source trees.
+- LISP engine template uses nentselp, the same nested-entity extraction rule as the GC2018 LISP, old/new entity comparison, redraw highlight, and LISP dis property reader.
+- LISP reader returns data only; no grread loop and no SOLID/TEXT overlay creation in the migrated hosts.
+- Current native tooltip path remains e.AppendToolTipText.
+- LISP template is ASCII-only, includes vl-acad-defun exposure for both bridge functions, and has balanced parentheses.
+- Build_Release.ps1 gates for the three migrated hosts verify the template is ASCII, has one bootstrap marker and contains the required bridge functions.
+- LISP Unicode escape strings are decoded to Unicode before being passed to the native tooltip.
+- TEXT and MTEXT content are returned by LISP reader.
+
+Preserved V16 checks:
+- Four host trees present with unique assembly names.
+- Buildtime\Language\lang.dat embedded for all hosts.
+- DUser\MIS_SET.SET remains the only runtime language selector.
+- Resolver implements DCAD-DATA-001 direct-folder/root-folder rules; no sibling inference.
+- AutoCAD adapters use ACADPREFIX; GstarCAD adapters use host GetSystemVariable("ACADPREFIX").
+- Resolver preserves Support File Search Path order, de-duplicates normalized paths and does not create folders/files.
+- Multiple MIS_SET.SET matches log CONFLICT; missing/invalid data falls back to embedded English and is never rewritten.
+- Runtime diagnostics remain under %TEMP%\DCAD\Dinformation\log.
+- Final Dprogram contains only four host DLLs plus README.txt after a successful Build_All.
+
+Not verified:
+- Windows compile/MSBuild.
+- Application.Invoke during PointMonitor on AutoCAD 2022/2025 and GstarCAD 2027.
+- NETLOAD on all CAD hosts.
+- Hover behavior for nested blocks, attributes, TEXT/MTEXT, dimensions, hatch, image, xref/proxy and empty space.
+- Escape/click/Enter cleanup, drawing switch and repeated command lifecycle.
