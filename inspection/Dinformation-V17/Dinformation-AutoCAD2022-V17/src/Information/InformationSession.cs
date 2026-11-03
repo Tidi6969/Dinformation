@@ -16,6 +16,7 @@ namespace DCAD.Dinformation.Information
         private bool _forcedPickEnabled;
         private bool _monitorErrorLogged;
         private bool _resetErrorLogged;
+        private bool _nativePickErrorLogged;
         // The native AutoCAD pick context is much cheaper than a LISP nentselp
         // round trip on every pixel of mouse motion.
         private ObjectId _lastPickedId = ObjectId.Null;
@@ -64,23 +65,36 @@ namespace DCAD.Dinformation.Information
             try
             {
                 ObjectId picked = ObjectId.Null;
-                FullSubentityPath[] paths = e.Context.GetPickedEntities();
-                if (paths != null)
+                try
                 {
-                    foreach (FullSubentityPath path in paths)
+                    FullSubentityPath[] paths = e.Context.GetPickedEntities();
+                    if (paths != null)
                     {
-                        ObjectId[] ids = path.GetObjectIds();
-                        if (ids == null || ids.Length == 0) continue;
-
-                        // GC2018 nentselp selects the outer INSERT for a nested
-                        // hit, so preserve that behavior rather than inspecting
-                        // a hidden block-definition child.
-                        ObjectId candidate = ids[0];
-                        if (!candidate.IsNull && candidate.IsValid && !candidate.IsErased)
+                        foreach (FullSubentityPath path in paths)
                         {
-                            picked = candidate;
-                            break;
+                            ObjectId[] ids = path.GetObjectIds();
+                            if (ids == null || ids.Length == 0) continue;
+    
+                            // GC2018 nentselp selects the outer INSERT for a nested
+                            // hit, so preserve that behavior rather than inspecting
+                            // a hidden block-definition child.
+                            ObjectId candidate = ids[0];
+                            if (!candidate.IsNull && candidate.IsValid && !candidate.IsErased)
+                            {
+                                picked = candidate;
+                                break;
+                            }
                         }
+                    }
+    
+                }
+                catch (System.Exception pickError)
+                {
+                    // Unsupported custom graphics must not disable the LISP fallback.
+                    if (!_nativePickErrorLogged)
+                    {
+                        _nativePickErrorLogged = true;
+                        RuntimeLog.Error("Native AutoCAD picking failed; using LISP fallback.", pickError);
                     }
                 }
 
