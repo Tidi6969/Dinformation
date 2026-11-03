@@ -20,7 +20,6 @@ namespace DCAD.Dinformation.Core
         private const string TemplateSuffix = "Dinformation-Tooltip.lsp.tpl";
         private const string BootstrapMarker = "@@BOOTSTRAP@@";
         private const string GetInfoFunction = "dcad-dinformation-getinfo";
-        private const string GetInfoByHandleFunction = "dcad-dinformation-getinfo-handle";
         private const string ResetFunction = "dcad-dinformation-reset";
         private const string TempPrefix = "DINFINFO_";
         private static bool _loaded;
@@ -217,20 +216,6 @@ namespace DCAD.Dinformation.Core
                 new TypedValue((int)LispDataType.Double, worldPoint.X),
                 new TypedValue((int)LispDataType.Double, worldPoint.Y),
                 new TypedValue((int)LispDataType.Double, worldPoint.Z)))
-            using (ResultBuffer result = AcApp.Invoke(args))
-            {
-                return ResultToText(result);
-            }
-        }
-
-        public static string GetTooltipText(string handle)
-        {
-            if (!_loaded) throw new InvalidOperationException("Dinformation LISP engine has not been loaded for this command.");
-            if (string.IsNullOrWhiteSpace(handle)) return string.Empty;
-
-            using (ResultBuffer args = new ResultBuffer(
-                new TypedValue((int)LispDataType.Text, GetInfoByHandleFunction),
-                new TypedValue((int)LispDataType.Text, handle)))
             using (ResultBuffer result = AcApp.Invoke(args))
             {
                 return ResultToText(result);
