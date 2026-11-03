@@ -46,7 +46,8 @@ if exist "Dprogram\DinformationC22.dll" del /q "Dprogram\DinformationC22.dll"
 set "RC=1"
 call :PRINT "TITLE" "Dinformation V18 - AutoCAD 2022"
 call :PRINT "BUILD" "[BUILD] AutoCAD 2022 Release x64"
-call "Dinformation-AutoCAD2022-V18\Build_Release.cmd" /nopause >"log\AutoCAD2022.log" 2>&1
+call "%~dp0Dinformation-AutoCAD2022-V18\Build_Release.cmd" /nopause >"log\AutoCAD2022.log" 2>&1
+cd /d "%~dp0"
 set "RC=!ERRORLEVEL!"
 if not "!RC!"=="0" goto :FINISH
 if not exist "Dinformation-AutoCAD2022-V18\bin\DinformationC22.dll" (
