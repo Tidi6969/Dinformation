@@ -16,6 +16,13 @@ namespace DCAD.Dinformation.Information
         private bool _forcedPickEnabled;
         private bool _monitorErrorLogged;
         private bool _resetErrorLogged;
+        // The native AutoCAD pick context is much cheaper than a LISP nentselp
+        // round trip on every pixel of mouse motion.
+        private ObjectId _lastPickedId = ObjectId.Null;
+        private string _lastTooltip = string.Empty;
+        private DateTime _lastFallback = DateTime.MinValue;
+        private bool _monitorActive;
+        private const double FallbackIntervalMs = 50.0;
 
         public InformationSession(Document document)
         {
@@ -49,20 +56,72 @@ namespace DCAD.Dinformation.Information
 
         private void OnPointMonitor(object sender, PointMonitorEventArgs e)
         {
+            if (e == null || e.Context == null || _monitorActive) return;
+
+            // PointMonitor events can be very frequent. Avoid nesting callback
+            // invocations and do not invoke the LISP reader for an unchanged pick.
+            _monitorActive = true;
             try
             {
-                if (e == null || e.Context == null) return;
-                string tooltip = LispInfoEngine.GetTooltipText(e.Context.RawPoint);
-                if (!string.IsNullOrWhiteSpace(tooltip))
-                    e.AppendToolTipText(tooltip);
+                ObjectId picked = ObjectId.Null;
+                FullSubentityPath[] paths = e.Context.GetPickedEntities();
+                if (paths != null)
+                {
+                    foreach (FullSubentityPath path in paths)
+                    {
+                        ObjectId[] ids = path.GetObjectIds();
+                        if (ids == null || ids.Length == 0) continue;
+
+                        // GC2018 nentselp selects the outer INSERT for a nested
+                        // hit, so preserve that behavior rather than inspecting
+                        // a hidden block-definition child.
+                        ObjectId candidate = ids[0];
+                        if (!candidate.IsNull && candidate.IsValid && !candidate.IsErased)
+                        {
+                            picked = candidate;
+                            break;
+                        }
+                    }
+                }
+
+                if (!picked.IsNull)
+                {
+                    if (_lastPickedId != picked)
+                    {
+                        _lastPickedId = picked;
+                        _lastTooltip = LispInfoEngine.GetTooltipText(picked.Handle.ToString());
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(_lastTooltip))
+                        e.AppendToolTipText(_lastTooltip);
+                    return;
+                }
+
+                // Some graphics/proxy entities do not appear in the native pick
+                // array. Keep nentselp as a fallback, but cap its polling rate.
+                _lastPickedId = ObjectId.Null;
+                if ((DateTime.UtcNow - _lastFallback).TotalMilliseconds < FallbackIntervalMs)
+                    return;
+
+                _lastFallback = DateTime.UtcNow;
+                _lastTooltip = LispInfoEngine.GetTooltipText(e.Context.RawPoint);
+                if (!string.IsNullOrWhiteSpace(_lastTooltip))
+                    e.AppendToolTipText(_lastTooltip);
             }
             catch (System.Exception exception)
             {
+                // Do not pin a stale tooltip to a new entity after a failed pick.
+                _lastPickedId = ObjectId.Null;
+                _lastTooltip = string.Empty;
                 if (!_monitorErrorLogged)
                 {
                     _monitorErrorLogged = true;
-                    RuntimeLog.Error("LISP PointMonitor bridge failed. Further errors in this command are suppressed.", exception);
+                    RuntimeLog.Error("PointMonitor native pick / LISP reader failed. Further errors in this command are suppressed.", exception);
                 }
+            }
+            finally
+            {
+                _monitorActive = false;
             }
         }
 
