@@ -1,0 +1,31 @@
+name: Archive DINFORMATION V20 four CAD branches
+on:
+  push:
+    branches: [fix/autocad2022-source-candidate]
+    paths:
+      - AutoCAD2022-Patch/PrepareV20FourHosts.ps1
+      - .github/workflows/archive-v20-all-hosts.yml
+permissions:
+  contents: write
+jobs:
+  build-package:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Build verify and archive V20 all hosts
+        shell: pwsh
+        run: |
+          & pwsh -NoProfile -File 'AutoCAD2022-Patch/PrepareV20FourHosts.ps1' -Publish
+          if ($LASTEXITCODE -ne 0) { throw "4 CAD build/package failed: $LASTEXITCODE" }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Dinformation-V20-four-hosts-QA
+          path: |
+            _ready20/Dinformation-V20.zip
+            _ready20/V20.txt
+            _stage20/Dinformation-V20/log/
+          if-no-files-found: warn
