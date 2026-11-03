@@ -22,7 +22,7 @@ No changes to GstarCAD 2018, AutoCAD 2025, GstarCAD 2027, DWG geometry, XData/XR
 | AI-07/08 | Native pick misses: immediate LISP fallback, no 50ms gap | Static source check passes; CAD hover not exercised | NotVerified (runtime) |
 | AI-07/08 | Proxy/unsupported ActiveX: visible type, layer, handle | Catch/fallback branch in LISP; no CAD fixture yet | NotVerified (runtime) |
 | AI-07/08 | Nested block: same outermost block info as GC2018 | `ids[0]` is outermost per Autodesk FullSubentityPath docs; runtime untested | NotVerified (runtime) |
-| AI-09 | Release x64 / net48, Autodesk SDK 24.1, correct C22 DLL & assembly V18 | GitHub Actions Windows preflight log | Pending V18 run result |
+| AI-09 | Release x64 / net48, Autodesk SDK 24.1, correct C22 DLL & assembly V18 | GitHub Actions Windows [41660605059](https://github.com/Tidi6969/Dinformation/actions/runs/41660605059): BuildExitCode=0, AssemblyVersion=18.0.0.0, compiler errors=0, warnings=0 | PASS (build only) |
 | AI-09 | NETLOAD, hover, ESC, selection, language and CAD appearance | Requires AutoCAD 2022 installation and DWG test samples | NotVerified |
 | AI-11 | Existing DUser, multilingual embedded data, LISP overlay behavior unchanged | Only three source files patched | PASS (source review), runtime NotVerified |
 | AI-12 / AUTO-04 | Release only when all required checks pass | Runtime remains NotVerified | HARD STOP for completed release |
