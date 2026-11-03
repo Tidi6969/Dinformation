@@ -51,6 +51,7 @@ foreach($t in $targets){
     if(!(Test-Path $p)){throw ('Missing '+$p)}
     $c=[IO.File]::ReadAllText($p)
     $c=$c.Replace('V17','V20').Replace('V19','V20').Replace('17.0.0.0','20.0.0.0').Replace('19.0.0.0','20.0.0.0')
+    if($targetName -eq 'GstarCAD2018' -and $rel -eq 'Build_Release.cmd'){$c=$c.Replace('powershell.exe -NoProfile','pwsh.exe -NoProfile')}
     if($rel -eq 'Data/BuildInfo.txt'){
       $cut=$c.IndexOf('Module=Dinformation')
       if($cut -ge 0){$c=$c.Substring(0,$cut)}
