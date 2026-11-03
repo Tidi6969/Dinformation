@@ -12,7 +12,7 @@ Copy-Item -LiteralPath (Join-Path $worktree 'V18/Dinformation-V18.zip') -Destina
 & git worktree remove --force $worktree | Out-Host
 if ($LASTEXITCODE -ne 0) { throw 'Cannot release temporary V18 worktree.' }
 if (-not (Test-Path -LiteralPath $baselineZip)) { throw 'Missing authoritative V18 baseline ZIP.' }
-$stage = Join-Path $repoRoot '_v18stage'
+$stage = Join-Path $repoRoot '_v19stage'
 if (Test-Path -LiteralPath $stage) { Remove-Item -LiteralPath $stage -Recurse -Force }
 $sourceRoot = Join-Path $stage 'Dinformation-V18'
 New-Item -ItemType Directory -Force -Path $sourceRoot | Out-Null
@@ -128,16 +128,6 @@ Copy-Item -LiteralPath $qaFile -Destination (Join-Path $qaTarget 'QA-V19.md') -F
 foreach ($oldOutput in @((Join-Path $package 'log'),(Join-Path $hostDir 'log'),(Join-Path $hostDir 'bin'),(Join-Path $hostDir 'obj'))) {
     if (Test-Path -LiteralPath $oldOutput) { Remove-Item -LiteralPath $oldOutput -Recurse -Force }
 }
-@'
-Dinformation V19 package changelog
-Baseline=V18
-Change=Clear old V17 audit metadata; rebuild V19, AutoCAD2022 only.
-BuildStatus=PASS
-RuntimeStatus=NotVerified
-StandardsStatus=NotVerified
-ReleaseApproved=NO
-'@ | Set-Content -LiteralPath (Join-Path $rootData 'CHANGELOG.txt') -Encoding utf8
-
 Write-Host 'Building V19 via package root Build_All.cmd ...'
 Push-Location $package
 try {
@@ -186,6 +176,15 @@ if (!(Test-Path -LiteralPath $rootData)) { New-Item -ItemType Directory -Path $r
 # historical artifacts, not current V19 package metadata; remove them here.
 Get-ChildItem -LiteralPath $rootData -File | Remove-Item -Force
 @'
+Dinformation V19 package changelog
+Baseline=V18
+Change=Clear old V17 audit metadata; rebuild V19, AutoCAD2022 only.
+BuildStatus=PASS
+RuntimeStatus=NotVerified
+StandardsStatus=NotVerified
+ReleaseApproved=NO
+'@ | Set-Content -LiteralPath (Join-Path $rootData 'CHANGELOG.txt') -Encoding utf8
+@'
 DINFORMATION V19 - SOURCE/BUILD CANDIDATE, NOT A COMPLETED RELEASE
 Baseline V18 original ZIP: untouched.
 CAD Target AutoCAD2022 ONLY.
@@ -202,7 +201,7 @@ $rootLog=Join-Path $package 'log'
 if (!(Test-Path $rootLog)) { throw 'Root log missing' }
 $projectObj=Join-Path $hostDir 'obj'
 if (Test-Path -LiteralPath $projectObj) { Remove-Item -LiteralPath $projectObj -Recurse -Force }
-$packZipDir=Join-Path $repoRoot '_v18prepared'
+$packZipDir=Join-Path $repoRoot '_v19prepared'
 if (!(Test-Path -LiteralPath $packZipDir)) { New-Item -ItemType Directory -Path $packZipDir | Out-Null }
 $archive=Join-Path $packZipDir 'Dinformation-V19.zip'
 if (Test-Path -LiteralPath $archive) { Remove-Item -LiteralPath $archive -Force }
