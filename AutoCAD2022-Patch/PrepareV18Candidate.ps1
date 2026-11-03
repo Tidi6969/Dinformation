@@ -122,7 +122,15 @@ try {
 } finally {
     Pop-Location
 }
-if ($buildExit -ne 0) { throw "HARD STOP: V18 build failed, exit=$buildExit" }
+if ($buildExit -ne 0) {
+    foreach ($diagPath in @((Join-Path $package 'log/Build_All.log'),(Join-Path $package 'log/AutoCAD2022.log'),(Join-Path $hostDir 'log/Build-V18.log'))) {
+        if (Test-Path -LiteralPath $diagPath) {
+            Write-Host "DIAGNOSTIC: $diagPath"
+            Get-Content -LiteralPath $diagPath -Tail 70 | ForEach-Object { Write-Host $_ }
+        }
+    }
+    throw "HARD STOP: V18 build failed, exit=$buildExit"
+}
 $dll = Join-Path $hostDir 'bin/DinformationC22.dll'
 $portableDll = Join-Path $oldDprogram 'DinformationC22.dll'
 if (!(Test-Path $dll) -or !(Test-Path $portableDll)) { throw 'HARD STOP: new compiled DLL missing.' }
