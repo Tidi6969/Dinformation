@@ -6,4 +6,4 @@ Stable/accepted version: Not confirmed.
 Download candidate for CAD runtime testing: [Dinformation-V19.zip](V19/Dinformation-V19.zip)
 Change log: [V19](Change%20log/V19.txt)
 V18 baseline: [Dinformation-V18.zip](V18/Dinformation-V18.zip) (unchanged).
-Other CAD targets are unchanged in baseline V18 and not rebuilt for V19.
+GstarCAD 2018, AutoCAD 2025 and GstarCAD 2027 original branches remain in archived V17; they were not rebuilt for V18 or V19.
