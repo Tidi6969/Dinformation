@@ -41,7 +41,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $project = Join-Path 'stage' 'Dinformation-V17/Dinformation-AutoCAD2022-V17'
+          $project = Join-Path 'stage' 'Dinformation-V18/Dinformation-AutoCAD2022-V18'
           Push-Location $project
           & cmd.exe /c 'Build_Release.cmd /nopause'
           $exitCode = $LASTEXITCODE
