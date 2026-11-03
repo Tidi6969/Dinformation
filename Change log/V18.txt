@@ -1,0 +1,21 @@
+Dinformation V18
+Module=Dinformation
+Repository=Tidi6969/Dinformation
+Baseline=V17
+MaxStoredBefore=V17
+TargetVersion=V18
+VersionReason=STD-17 default +1
+CADTargets=AutoCAD2022
+VersionType=SOURCE/BUILD CANDIDATE - PENDING CAD RUNTIME TEST
+BuildStatus=PASS
+RuntimeStatus=NotVerified
+StandardsStatus=NotVerified
+ReleaseApproved=NO
+VersionAssembly=18.0.0.0
+BuildSDK=Autodesk AcCoreMgd/AcDbMgd/AcMgd 24.1, net48, x64
+FilesChanged=InformationSession.cs; LispInfoEngine.cs; Dinformation-Tooltip.lsp.tpl; required V18 packaging metadata/scripts
+Summary=Native-picked-object cache avoids repeating LISP hit tests. Original LISP nentselp fallback is immediate when native picker misses. Unsupported property reader returns DXF type/layer/handle.
+Preserved=All GstarCAD 2018, AutoCAD 2025, GstarCAD 2027 originals in V17; geometry/settings/XData/language/command remain unchanged.
+KnownIssues=Real AutoCAD 2022 NETLOAD, speed, entity coverage, nested blocks/proxies, ESC, UCS, visual build console and six languages NotVerified. Not a completed release.
+ArchiveSha256=F0801AF2B5F4A41B186C00BF32CBAA39867406DA74D45498090ED549B2A77140
+ArchiveSize=4674178
