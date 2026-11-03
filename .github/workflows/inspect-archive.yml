@@ -1,0 +1,49 @@
+name: Inspect archived DINFORMATION source (working branch)
+on:
+  push:
+    branches:
+      - dcad/dinformation-autocad2022-fix
+permissions:
+  contents: write
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Extract text source from V17 snapshot without executing archived scripts
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path, PurePosixPath
+          from zipfile import ZipFile
+          archive = Path('V17/Dinformation-V17.zip')
+          target = Path('inspection')
+          allowed = {'.cs','.lsp','.fas','.dcl','.csproj','.sln','.cmd','.bat','.xml','.json','.config','.txt','.md','.resx','.props','.targets','.ps1','.set','.ini'}
+          target.mkdir(exist_ok=True)
+          found = []
+          with ZipFile(archive) as z:
+              for entry in z.infolist():
+                  p = PurePosixPath(entry.filename.replace('\\','/'))
+                  if entry.is_dir() or p.is_absolute() or '..' in p.parts or p.suffix.lower() not in allowed or entry.file_size > 2_000_000:
+                      continue
+                  if len(found) >= 1000:
+                      raise ValueError('Too many text files; refusing partial extraction')
+                  out = target.joinpath(*p.parts)
+                  out.parent.mkdir(parents=True,exist_ok=True)
+                  out.write_bytes(z.read(entry))
+                  found.append(f'{p.as_posix()} ({entry.file_size} bytes)')
+          (target/'TREE.txt').write_text('\n'.join(found)+'\n', encoding='utf-8')
+          print('Extracted',len(found),'text files for source review')
+          PY
+      - name: Commit extracted source only on working branch
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add inspection/
+          if ! git diff --staged --quiet; then
+            git commit -m "chore: expose V17 text sources for AutoCAD 2022 audit"
+            git push
+          fi
