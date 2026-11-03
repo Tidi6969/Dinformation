@@ -1,4 +1,4 @@
-name: Build AutoCAD 2022 source candidate from V17 baseline
+name: Build DINFORMATION V18 AutoCAD 2022 preflight from V17 baseline
 on:
   push:
     branches:
@@ -22,6 +22,21 @@ jobs:
             if (!(Test-Path -LiteralPath $from) -or !(Test-Path -LiteralPath $to)) { throw "Missing patch file: $file" }
             Copy-Item -LiteralPath $from -Destination $to -Force
           }
+          # Prepare next version without modifying the V17 archive or other host sources.
+          Rename-Item -LiteralPath 'stage/Dinformation-V17' -NewName 'Dinformation-V18'
+          Rename-Item -LiteralPath 'stage/Dinformation-V18/Dinformation-AutoCAD2022-V17' -NewName 'Dinformation-AutoCAD2022-V18'
+          $target = 'stage/Dinformation-V18/Dinformation-AutoCAD2022-V18'
+          foreach ($relative in @('AssemblyInfo.cs','src/Core/DinformationCommands.cs','Dinformation.csproj','Build_Release.cmd','Buildtime/Build_Release.ps1','README.md','Data/BuildInfo.txt','Data/DataManifest.txt')) {
+            $filePath = Join-Path $target $relative
+            if (!(Test-Path -LiteralPath $filePath)) { throw "Missing versioned source: $relative" }
+            $before = [IO.File]::ReadAllText((Resolve-Path -LiteralPath $filePath).Path)
+            $after = $before.Replace('V17','V18').Replace('17.0.0.0','18.0.0.0')
+            [IO.File]::WriteAllText((Resolve-Path -LiteralPath $filePath).Path, $after, [Text.UTF8Encoding]::new($false))
+          }
+          foreach ($other in @('Dinformation-AutoCAD2025-V17','Dinformation-GstarCAD2018-V17','Dinformation-GstarCAD2027-V17')) {
+            $otherPath = Join-Path 'stage/Dinformation-V18' $other
+            if (Test-Path -LiteralPath $otherPath) { Remove-Item -LiteralPath $otherPath -Recurse -Force }
+          }
       - name: Build Release x64 on Windows with original Autodesk 2022 SDK
         shell: pwsh
         run: |
@@ -32,13 +47,15 @@ jobs:
           $exitCode = $LASTEXITCODE
           Pop-Location
           if ($exitCode -ne 0) { throw "AutoCAD2022 build failed: $exitCode" }
-          if (!(Test-Path 'stage/Dinformation-V17/Dinformation-AutoCAD2022-V17/bin/DinformationC22.dll')) { throw 'Build returned success but DLL missing' }
+          if (!(Test-Path 'stage/Dinformation-V18/Dinformation-AutoCAD2022-V18/bin/DinformationC22.dll')) { throw 'Build returned success but DLL missing' }
+          $dll = [Reflection.AssemblyName]::GetAssemblyName((Resolve-Path 'stage/Dinformation-V18/Dinformation-AutoCAD2022-V18/bin/DinformationC22.dll').Path)
+          if ($dll.Version.ToString() -ne '18.0.0.0') { throw "Expected V18 assembly; got $($dll.Version)" }
       - name: Attach test DLL and compiler log (not a release)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: dinformation-autocad2022-source-candidate
+          name: dinformation-v18-acad2022-preflight-not-release
           path: |
-            stage/Dinformation-V17/Dinformation-AutoCAD2022-V17/log/
-            stage/Dinformation-V17/Dinformation-AutoCAD2022-V17/bin/DinformationC22.dll
+            stage/Dinformation-V18/Dinformation-AutoCAD2022-V18/log/
+            stage/Dinformation-V18/Dinformation-AutoCAD2022-V18/bin/DinformationC22.dll
           if-no-files-found: warn
