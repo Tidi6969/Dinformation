@@ -16,6 +16,12 @@ namespace DCAD.Dinformation.Information
         private bool _forcedPickEnabled;
         private bool _monitorErrorLogged;
         private bool _resetErrorLogged;
+        private bool _nativePickErrorLogged;
+        // The native AutoCAD pick context is much cheaper than a LISP nentselp
+        // round trip on every pixel of mouse motion.
+        private ObjectId _lastPickedId = ObjectId.Null;
+        private string _lastTooltip = string.Empty;
+        private bool _monitorActive;
 
         public InformationSession(Document document)
         {
@@ -28,7 +34,7 @@ namespace DCAD.Dinformation.Information
             ResetLispState();
             Subscribe();
             EnableForcedPick();
-            RuntimeLog.Info("Command session started. Drawing=" + (_document.Name ?? string.Empty) + "; Recognition=LISP nentselp/dis; Display=NativePointMonitorTooltip");
+            RuntimeLog.Info("Command session started. Drawing=" + (_document.Name ?? string.Empty) + "; Recognition=NativePickedEntities+LISP nentselp/dis; Display=NativePointMonitorTooltip");
 
             try
             {
@@ -49,20 +55,96 @@ namespace DCAD.Dinformation.Information
 
         private void OnPointMonitor(object sender, PointMonitorEventArgs e)
         {
+            if (e == null || e.Context == null || _monitorActive) return;
+
+            // PointMonitor events can be very frequent. Avoid nesting callback
+            // invocations and do not invoke the LISP reader for an unchanged pick.
+            _monitorActive = true;
             try
             {
-                if (e == null || e.Context == null) return;
-                string tooltip = LispInfoEngine.GetTooltipText(e.Context.RawPoint);
-                if (!string.IsNullOrWhiteSpace(tooltip))
-                    e.AppendToolTipText(tooltip);
+                ObjectId picked = ObjectId.Null;
+                try
+                {
+                    FullSubentityPath[] paths = e.Context.GetPickedEntities();
+                    if (paths != null)
+                    {
+                        foreach (FullSubentityPath path in paths)
+                        {
+                            ObjectId[] ids = path.GetObjectIds();
+                            if (ids == null || ids.Length == 0) continue;
+    
+                            // GC2018 nentselp selects the outer INSERT for a nested
+                            // hit, so preserve that behavior rather than inspecting
+                            // a hidden block-definition child.
+                            ObjectId candidate = ids[0];
+                            if (!candidate.IsNull && candidate.IsValid && !candidate.IsErased)
+                            {
+                                picked = candidate;
+                                break;
+                            }
+                        }
+                    }
+    
+                }
+                catch (System.Exception pickError)
+                {
+                    // Unsupported custom graphics must not disable the LISP fallback.
+                    if (!_nativePickErrorLogged)
+                    {
+                        _nativePickErrorLogged = true;
+                        RuntimeLog.Error("Native AutoCAD picking failed; using LISP fallback.", pickError);
+                    }
+                }
+
+                if (!picked.IsNull)
+                {
+                    try
+                    {
+                        if (_lastPickedId != picked)
+                        {
+                            _lastPickedId = picked;
+                            _lastTooltip = LispInfoEngine.GetTooltipText(picked.Handle.ToString());
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(_lastTooltip))
+                        {
+                            e.AppendToolTipText(_lastTooltip);
+                            return;
+                        }
+                    }
+                    catch (System.Exception handleError)
+                    {
+                        // Keep the original LISP hit test if a native picked object
+                        // has an unsupported handle/ActiveX reader.
+                        if (!_nativePickErrorLogged)
+                        {
+                            _nativePickErrorLogged = true;
+                            RuntimeLog.Error("Native object read failed; using LISP fallback.", handleError);
+                        }
+                    }
+                }
+
+                // Unthrottled fallback: the 50 ms gap could omit small objects
+                // while the pointer moves quickly. Preserve original V17 behavior.
+                _lastPickedId = ObjectId.Null;
+                _lastTooltip = LispInfoEngine.GetTooltipText(e.Context.RawPoint);
+                if (!string.IsNullOrWhiteSpace(_lastTooltip))
+                    e.AppendToolTipText(_lastTooltip);
             }
             catch (System.Exception exception)
             {
+                // Do not pin a stale tooltip to a new entity after a failed pick.
+                _lastPickedId = ObjectId.Null;
+                _lastTooltip = string.Empty;
                 if (!_monitorErrorLogged)
                 {
                     _monitorErrorLogged = true;
-                    RuntimeLog.Error("LISP PointMonitor bridge failed. Further errors in this command are suppressed.", exception);
+                    RuntimeLog.Error("PointMonitor native pick / LISP reader failed. Further errors in this command are suppressed.", exception);
                 }
+            }
+            finally
+            {
+                _monitorActive = false;
             }
         }
 
