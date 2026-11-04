@@ -1,0 +1,134 @@
+name: Package Dinformation C22 V17 patched source for direct handoff
+on:
+  push:
+    branches:
+      - fix/dinformation-v21-c22-v17-baseline
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Stage original V17 single approved C22 host and patch
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          Expand-Archive -LiteralPath 'V17/Dinformation-V17.zip' -DestinationPath 'stage' -Force
+          $root='Dinformation-V17/Dinformation-AutoCAD2022-V17'
+          $target='package/Dinformation-AutoCAD2022-V17'
+          New-Item -ItemType Directory -Force -Path 'package' | Out-Null
+          Copy-Item -LiteralPath (Join-Path 'stage' $root) -Destination $target -Recurse -Force
+          foreach($file in @('src/Information/InformationSession.cs','src/Core/LispInfoEngine.cs','Buildtime/Dinformation-Tooltip.lsp.tpl')) {
+            $from=Join-Path 'inspection' (Join-Path $root $file)
+            $to=Join-Path $target $file
+            if(!(Test-Path -LiteralPath $from) -or !(Test-Path -LiteralPath $to)){throw "Missing source: $file"}
+            Copy-Item -LiteralPath $from -Destination $to -Force
+          }
+          foreach($dir in @('bin','log','Reference','Runtime','icon','Buildtime','Userdata','src')) {
+            New-Item -ItemType Directory -Force -Path (Join-Path $target $dir)|Out-Null
+          }
+          if(Test-Path "$target/Data/BuildInfo.txt"){Copy-Item "$target/Data/BuildInfo.txt" "$target/Userdata/BuildInfo.txt" -Force}
+          if(Test-Path "$target/Data/DataManifest.txt"){Copy-Item "$target/Data/DataManifest.txt" "$target/Userdata/DataManifest.txt" -Force}
+          if(Test-Path "$target/bin"){Get-ChildItem -LiteralPath "$target/bin" -File | Remove-Item -Force}
+          New-Item -ItemType Directory -Force -Path 'package/Dprogram','package/log'|Out-Null
+      - name: Write single-target CMD using CRLF and original project Build_Release
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $lines=@(
+            '@echo off',
+            'setlocal EnableExtensions',
+            'set "ROOT=%~dp0"',
+            'set "EXIT_CODE=1"',
+            'set "NO_PAUSE=0"',
+            'if /I "%~1"=="/nopause" set "NO_PAUSE=1"',
+            'cd /d "%ROOT%"',
+            'if not exist "%ROOT%log" mkdir "%ROOT%log"',
+            'if not exist "%ROOT%Dprogram" mkdir "%ROOT%Dprogram"',
+            'if exist "%ROOT%Dprogram\DinformationC22.dll" del /q "%ROOT%Dprogram\DinformationC22.dll"',
+            'echo [BUILD] Dinformation C22 V17 patched source',
+            'color 0B',
+            'if not exist "%ROOT%Dinformation-AutoCAD2022-V17\Build_Release.cmd" goto :FINISH',
+            'call "%ROOT%Dinformation-AutoCAD2022-V17\Build_Release.cmd" /nopause > "%ROOT%log\AutoCAD2022.log" 2>&1',
+            'set "EXIT_CODE=%ERRORLEVEL%"',
+            'if not "%EXIT_CODE%"=="0" goto :FINISH',
+            'if not exist "%ROOT%Dinformation-AutoCAD2022-V17\bin\DinformationC22.dll" goto :MISSING',
+            'copy /Y "%ROOT%Dinformation-AutoCAD2022-V17\bin\DinformationC22.dll" "%ROOT%Dprogram\DinformationC22.dll" >nul',
+            'set "EXIT_CODE=%ERRORLEVEL%"',
+            'goto :FINISH',
+            ':MISSING',
+            'set "EXIT_CODE=1"',
+            ':FINISH',
+            'if "%EXIT_CODE%"=="0" goto :PASS',
+            'color 0C',
+            'echo [FAIL] BUILD ALL: FAIL. See log\AutoCAD2022.log',
+            'goto :DONE',
+            ':PASS',
+            'color 0A',
+            'echo [PASS] BUILD ALL: PASS - Dprogram\DinformationC22.dll',
+            ':DONE',
+            'echo Build log: %ROOT%log\AutoCAD2022.log',
+            'if "%NO_PAUSE%"=="1" goto :EXIT',
+            'echo Nhan phim bat ky de thoat...',
+            'pause >nul',
+            ':EXIT',
+            'endlocal & exit /b %EXIT_CODE%'
+          )
+          $text=($lines -join "`r`n")+"`r`n"
+          [IO.File]::WriteAllBytes((Join-Path (Get-Location).Path 'package/Build_All.cmd'),[Text.UTF8Encoding]::new($false).GetBytes($text))
+      - name: Build in package using its own root CMD
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          Push-Location 'package'
+          try {
+            & cmd.exe /c 'Build_All.cmd /nopause'
+            $exitCode=$LASTEXITCODE
+          } finally {Pop-Location}
+          if($exitCode -ne 0){throw "C22 build/package failed exit $exitCode"}
+          if(!(Test-Path 'package/Dprogram/DinformationC22.dll')){throw 'Fresh portable DLL missing'}
+          $assembly=[Reflection.AssemblyName]::GetAssemblyName((Resolve-Path 'package/Dprogram/DinformationC22.dll').Path)
+          if($assembly.Version.ToString() -ne '17.0.0.0'){throw "Unexpected candidate assembly version: $($assembly.Version)"}
+      - name: Create and inspect source plus binary ZIP
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          @'
+          from pathlib import Path
+          from zipfile import ZipFile, ZIP_DEFLATED
+          import hashlib
+          src=Path('package')
+          output=Path('Dinformation-C22-V17-Patched-SourceBuild.zip')
+          files=sorted(p for p in src.rglob('*') if p.is_file())
+          with ZipFile(output,'w',compression=ZIP_DEFLATED,compresslevel=6) as z:
+              for p in files:
+                  rel=p.relative_to(src).as_posix()
+                  if '/obj/' in '/'+rel or rel.endswith('.cache'):
+                      continue
+                  z.write(p,rel)
+              for d in ['Runtime','Userdata','bin','log','Reference','icon','Buildtime','src']:
+                  rel='Dinformation-AutoCAD2022-V17/'+d+'/'
+                  if not any(x.filename==rel for x in z.infolist()):z.writestr(rel,b'')
+          with ZipFile(output) as z:
+              assert z.testzip() is None
+              names=set(z.namelist())
+              assert 'Build_All.cmd' in names
+              assert 'Dprogram/DinformationC22.dll' in names
+              assert 'Dinformation-AutoCAD2022-V17/src/Core/LispInfoEngine.cs' in names
+              assert not any('GstarCAD2018' in n or 'GstarCAD2027' in n or 'AutoCAD2025' in n for n in names)
+              dll=z.read('Dprogram/DinformationC22.dll')
+              original=z.read('Dinformation-AutoCAD2022-V17/bin/DinformationC22.dll')
+              assert dll==original
+              script=z.read('Build_All.cmd')
+              assert script.startswith(b'@echo off\r\n') and b'\r\r\n' not in script and b'\xef\xbb\xbf' not in script
+              print('ZIP_OK',len(names),'entries','DLL_SHA256',hashlib.sha256(dll).hexdigest())
+          '@ | python -
+      - name: Upload directly downloadable ZIP and source-build log
+        uses: actions/upload-artifact@v4
+        with:
+          name: dinformation-c22-v17-patched-sourcebuild
+          path: |
+            Dinformation-C22-V17-Patched-SourceBuild.zip
+            package/log/AutoCAD2022.log
+          if-no-files-found: error
