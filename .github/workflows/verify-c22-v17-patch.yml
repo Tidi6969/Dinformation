@@ -1,0 +1,48 @@
+name: Verify Dinformation C22 patch from original V17
+on:
+  push:
+    branches:
+      - fix/dinformation-v21-c22-v17-baseline
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply only the three reviewed C22 source files to original V17 ZIP
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Expand-Archive -LiteralPath 'V17/Dinformation-V17.zip' -DestinationPath 'stage' -Force
+          $root = 'Dinformation-V17/Dinformation-AutoCAD2022-V17'
+          foreach ($file in @('src/Information/InformationSession.cs','src/Core/LispInfoEngine.cs','Buildtime/Dinformation-Tooltip.lsp.tpl')) {
+            $from = Join-Path 'inspection' (Join-Path $root $file)
+            $to = Join-Path 'stage' (Join-Path $root $file)
+            if (!(Test-Path -LiteralPath $from) -or !(Test-Path -LiteralPath $to)) {
+              throw "Missing reviewed source: $file"
+            }
+            Copy-Item -LiteralPath $from -Destination $to -Force
+          }
+      - name: Build AutoCAD 2022 Release x64 with original host references
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $project = 'stage/Dinformation-V17/Dinformation-AutoCAD2022-V17'
+          Push-Location $project
+          try {
+            & cmd.exe /c 'Build_Release.cmd /nopause'
+            if ($LASTEXITCODE -ne 0) { throw "C22 compiler/build returned $LASTEXITCODE" }
+          } finally { Pop-Location }
+          if (!(Test-Path "$project/bin/DinformationC22.dll")) {
+            throw 'Missing fresh C22 DLL'
+          }
+      - name: Preserve preflight DLL and compiler logs; not a published V21 release
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dinformation-c22-v17-source-patch-preflight
+          path: |
+            stage/Dinformation-V17/Dinformation-AutoCAD2022-V17/log/
+            stage/Dinformation-V17/Dinformation-AutoCAD2022-V17/bin/DinformationC22.dll
+          if-no-files-found: warn
