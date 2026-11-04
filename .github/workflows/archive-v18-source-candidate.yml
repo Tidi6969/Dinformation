@@ -1,0 +1,34 @@
+name: Prepare and archive DINFORMATION V18 AutoCAD2022 source candidate
+on:
+  push:
+    branches:
+      - fix/autocad2022-source-candidate
+    paths:
+      - .github/workflows/archive-v18-source-candidate.yml
+      - AutoCAD2022-Patch/PrepareV18Candidate.ps1
+permissions:
+  contents: write
+jobs:
+  prepare-source-candidate:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Build validate package and archive source candidate pending CAD runtime
+        shell: pwsh
+        run: |
+          & pwsh -NoProfile -File 'AutoCAD2022-Patch/PrepareV18Candidate.ps1' -PublishCandidate
+          if ($LASTEXITCODE -ne 0) { throw "V18 source candidate preparation failed: $LASTEXITCODE" }
+      - name: Retain package/log as workflow evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dinformation-v18-source-candidate-qa
+          path: |
+            _v18prepared/Dinformation-V18.zip
+            _v18prepared/V18.txt
+            _v18stage/Dinformation-V18/log/
+            _v18stage/Dinformation-V18/Dinformation-AutoCAD2022-V18/log/
+          if-no-files-found: warn

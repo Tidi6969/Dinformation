@@ -1,0 +1,33 @@
+name: Archive DINFORMATION V19 AutoCAD2022 source candidate
+on:
+  push:
+    branches:
+      - fix/autocad2022-source-candidate
+    paths:
+      - .github/workflows/archive-v19-source-candidate.yml
+      - AutoCAD2022-Patch/PrepareV19Candidate.ps1
+permissions:
+  contents: write
+jobs:
+  package:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Prepare and archive V19 source candidate with real Windows C22 build
+        shell: pwsh
+        run: |
+          & pwsh -NoProfile -File 'AutoCAD2022-Patch/PrepareV19Candidate.ps1' -PublishCandidate
+          if ($LASTEXITCODE -ne 0) { throw "V19 packaging failed: $LASTEXITCODE" }
+      - name: Retain ZIP and validation logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dinformation-v19-source-candidate-qa
+          path: |
+            _v19prepared/Dinformation-V19.zip
+            _v19prepared/V19.txt
+            _v19stage/Dinformation-V19/log/
+          if-no-files-found: warn
