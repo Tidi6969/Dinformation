@@ -89,7 +89,7 @@ def make_child_cmd(host: str, dll: str) -> list[str]:
         'endlocal & exit /b %RESULT%',
         ':PRINT',
         'if defined NO_COLOR (echo %~1 & exit /b 0)',
-        'powershell.exe -NoProfile -Command "Write-Host $args[0] -ForegroundColor $args[1]" -- "%~1" "%~2"',
+        'powershell.exe -NoProfile -Command "Write-Host \'%~1\' -ForegroundColor %~2"',
         'if errorlevel 1 echo %~1',
         'exit /b 0',
     ]
@@ -185,7 +185,7 @@ def make_root_cmd() -> list[str]:
         'endlocal & exit /b %FINAL_RESULT%',
         ':PRINT',
         'if defined NO_COLOR (echo %~1 & exit /b 0)',
-        'powershell.exe -NoProfile -Command "Write-Host $args[0] -ForegroundColor $args[1]" -- "%~1" "%~2"',
+        'powershell.exe -NoProfile -Command "Write-Host \'%~1\' -ForegroundColor %~2"',
         'if errorlevel 1 echo %~1',
         'exit /b 0',
     ]
@@ -232,13 +232,21 @@ def prepare() -> None:
             'StandardsStatus=NotVerified\nReleaseApproved=NO\n'
             'ChangedBusinessCode=AutoCAD2022 hover recognition only\n',
             encoding='utf-8')
-        existing_manifest=target/'Data'/'DataManifest.txt'
-        if existing_manifest.exists():
-            shutil.copy2(existing_manifest, metadata/'DataManifest-V17-legacy.txt')
+        # The old V17 Data folder contains stale metadata; canonical source metadata
+        # belongs directly under Userdata per STD-03. Do not modify business logic.
+        legacy_data=target/'Data'
+        if legacy_data.exists():
+            shutil.rmtree(legacy_data)
+        (metadata/'DataManifest.txt').write_text(
+            'Project=Dinformation\\nPackageVersion=V21\\nOwnerModule=Dinformation\\n'
+            'ResourceName=Buildtime/Language/lang.dat;Type=BuildTime;Required=true;Embedded=true;AccessMode=Read;DefaultBehavior=Error\\n'
+            'ResourceName=MIS_SET.SET;Type=RuntimeSystem;Required=true;LogicalFolder=DUser;AccessMode=ReadOnly;DefaultBehavior=LegacySourceFallback;SourcePath=CAD Support Path\\n'
+            'ResourceName=24.0_(IDD)-object-information.LSP;Type=Documentation;Required=false;SourcePath=Userdata;Embedded=false;DefaultBehavior=NotLoadedAtRuntime\\n'
+            'KnownDeviation=V17 DUser resolver and TEMP diagnostics remain legacy; source behavior intentionally unchanged by C22 recognition patch; STD05/06 compliance NotVerified\\n',
+            encoding='utf-8')
         write_cmd(target/'Build_Release.cmd',make_child_cmd(host,dll))
     write_cmd(PACKAGE/'Build_All.cmd',make_root_cmd())
-    (PACKAGE/'Userdata').mkdir(exist_ok=True)
-    (PACKAGE/'Userdata'/'ReleaseNotes.txt').write_text(
+    (PACKAGE/'Dinformation-AutoCAD2022-V21'/'Userdata'/'ReleaseNotes.txt').write_text(
         'Dinformation V21 source candidate (not CAD runtime accepted)\n'
         'Baseline V17, latest saved before change V20\n'
         'Scope: only AutoCAD 2022 recognition behavior changed, C25/G27 source logic otherwise unchanged\n'
