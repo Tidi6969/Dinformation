@@ -1,0 +1,57 @@
+name: Build and package Dinformation V21 from V17 with three approved CAD hosts
+on:
+  push:
+    branches:
+      - fix/dinformation-v21-c22-v17-baseline
+permissions:
+  contents: read
+jobs:
+  package-v21:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Create versioned projects from original V17 and apply only C22 patch
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          python packaging/build_v21_package.py prepare
+          if ($LASTEXITCODE -ne 0) { throw "V21 staging failed" }
+      - name: Build all three approved CAD hosts through root Build_All.cmd
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Push-Location package-v21
+          try {
+            & cmd.exe /c 'Build_All.cmd /nopause' *> ..\build-v21-console.txt
+            $code=$LASTEXITCODE
+          } finally { Pop-Location }
+          Get-Content build-v21-console.txt -Tail 100
+          if ($code -ne 0) { throw "Dinformation V21 BUILD ALL failed: $code" }
+      - name: ZIP, reopen, inspect tree, verify exact outputs and version
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          python packaging/build_v21_package.py finalize
+          if ($LASTEXITCODE -ne 0) { throw "Packaging QA failed" }
+          foreach ($item in @(
+            @('AutoCAD2022','DinformationC22.dll'),
+            @('AutoCAD2025','DinformationC25.dll'),
+            @('GstarCAD2027','DinformationG27.dll'))) {
+              $path = Join-Path (Join-Path 'package-v21' ('Dinformation-' + $item[0] + '-V21')) ('bin\' + $item[1])
+              $v=[Reflection.AssemblyName]::GetAssemblyName((Resolve-Path $path).Path).Version.ToString()
+              if ($v -ne '21.0.0.0') { throw ('Unexpected ' + $item[0] + ' AssemblyVersion=' + $v) }
+              Write-Host ('[PASS] '+$item[0]+' AssemblyVersion='+$v)
+          }
+      - name: Upload V21 candidate ZIP and build logs (not NETLOAD verified)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dinformation-v21-three-hosts-sourcebuild-candidate
+          path: |
+            Dinformation-V21.zip
+            build-v21-console.txt
+            package-v21/log/
+          if-no-files-found: warn
