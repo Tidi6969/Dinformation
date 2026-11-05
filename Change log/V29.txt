@@ -1,0 +1,33 @@
+Dinformation V29 — Ghi nhận đồng bộ phiên bản và xác nhận theo ngữ cảnh
+Ngày: 05/11/2026 (Asia/Bangkok)
+Repository: https://github.com/Tidi6969/Dinformation
+Nhánh: main
+Quy chuẩn: https://github.com/Tidi6969/QuyUoc/blob/main/17_Autoupdate.md (§2.1, §8, §9)
+
+1. Lưu trữ
+- Phiên bản lớn nhất có ZIP trên GitHub: V29.
+- File ZIP: Dinformation-V29.zip, tại thư mục gốc repository.
+- URL: https://github.com/Tidi6969/Dinformation/blob/main/Dinformation-V29.zip
+- Kích thước: 10.886.377 byte.
+- Git blob SHA: 30de9f8934c9e311455489d68fa60b7f65a7f509.
+- Commit upload: 8c206a4e6a88042beb520937f0813f8e7feff734.
+- Các ZIP V17/V18/V19/V20 vẫn được lưu nguyên tại V17/, V18/, V19/, V20/. Không xóa hoặc di chuyển phiên bản cũ.
+
+2. Xác nhận của chủ dự án
+- Yêu cầu ngày 05/11/2026: “tương tự https://github.com/Tidi6969/Dinformation”, ngay sau yêu cầu “tương tự V105 ok” cho Dlayout và quy trình cập nhật trạng thái nghiệm thu.
+- Ghi nhận V29 là phiên bản mới nhất mà yêu cầu đồng bộ tương tự hướng đến.
+- UserReportedWorking=YES (ContextInferred): diễn giải yêu cầu “tương tự” là muốn ghi nhận OK giống Dlayout; người dùng KHÔNG phát biểu trực tiếp câu “V29 đã test OK” hoặc nêu danh sách CAD host.
+- UserReportedBuild=NotSpecified: không có xác nhận rõ build V29 trong yêu cầu này.
+- BuildStatusPerHost=NotVerified; NETLOAD/RuntimeStatusPerHost=NotVerified: chưa có log/kết quả thử riêng theo host.
+- StandardsStatus=NotVerified; nội dung ZIP/source/SDK/CRC/SHA-256 của V29 chưa được trích xuất/kiểm tra trong lượt này.
+- CAD target lịch sử theo V20: AutoCAD2022, AutoCAD2025, GstarCAD2018, GstarCAD2027. Đây không phải chứng cứ V29 đã được thử đủ các host.
+
+3. Phiên bản gốc và điều kiện chọn baseline
+- Baseline mặc định cho yêu cầu phát triển mới không chỉ định gốc: V29 theo STD-17 §2.1, phải kiểm tra ZIP thực tế trước khi sửa.
+- Nếu có yêu cầu sửa phần mềm mới và không chỉ định version đích: mặc định V30; lần này KHÔNG tạo V30.
+- Lưu lại thông tin lịch sử ngày 05/11/2026: chủ dự án từng chọn V16 làm baseline ưu tiên về hành vi chức năng khi phản hồi các bản hậu V17/V21 không đạt. V16 chưa có ZIP trên GitHub nhưng từng được đính kèm trong ChatGPT. Không coi ghi nhận mới là xác minh kỹ thuật rằng mọi chức năng V16 đã trở lại trong V29; khi chủ dự án chỉ định V16 làm nguồn sửa cụ thể, ưu tiên chỉ định đó.
+- Nguồn thật sự đã dùng để tạo V29 chưa được xác minh; không tự suy là V28 hay V16.
+
+4. Đồng bộ theo STD-17
+- Cập nhật README Dinformation, Change log/V29.txt, danh mục DCAD và Assessments/Dinformation-V29.md.
+- Không sửa code, không build lại, không can thiệp ZIP V29 và các bản lịch sử, không tạo V30.
