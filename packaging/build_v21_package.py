@@ -238,11 +238,11 @@ def prepare() -> None:
         if legacy_data.exists():
             shutil.rmtree(legacy_data)
         (metadata/'DataManifest.txt').write_text(
-            'Project=Dinformation\\nPackageVersion=V21\\nOwnerModule=Dinformation\\n'
-            'ResourceName=Buildtime/Language/lang.dat;Type=BuildTime;Required=true;Embedded=true;AccessMode=Read;DefaultBehavior=Error\\n'
-            'ResourceName=MIS_SET.SET;Type=RuntimeSystem;Required=true;LogicalFolder=DUser;AccessMode=ReadOnly;DefaultBehavior=LegacySourceFallback;SourcePath=CAD Support Path\\n'
-            'ResourceName=24.0_(IDD)-object-information.LSP;Type=Documentation;Required=false;SourcePath=Userdata;Embedded=false;DefaultBehavior=NotLoadedAtRuntime\\n'
-            'KnownDeviation=V17 DUser resolver and TEMP diagnostics remain legacy; source behavior intentionally unchanged by C22 recognition patch; STD05/06 compliance NotVerified\\n',
+            'Project=Dinformation\nPackageVersion=V21\nOwnerModule=Dinformation\n'
+            'ResourceName=Buildtime/Language/lang.dat;Type=BuildTime;Required=true;Embedded=true;AccessMode=Read;DefaultBehavior=Error\n'
+            'ResourceName=MIS_SET.SET;Type=RuntimeSystem;Required=true;LogicalFolder=DUser;AccessMode=ReadOnly;DefaultBehavior=LegacySourceFallback;SourcePath=CAD Support Path\n'
+            'ResourceName=24.0_(IDD)-object-information.LSP;Type=Documentation;Required=false;SourcePath=Userdata;Embedded=false;DefaultBehavior=NotLoadedAtRuntime\n'
+            'KnownDeviation=V17 DUser resolver and TEMP diagnostics remain legacy; source behavior intentionally unchanged by C22 recognition patch; STD05/06 compliance NotVerified\n',
             encoding='utf-8')
         write_cmd(target/'Build_Release.cmd',make_child_cmd(host,dll))
     write_cmd(PACKAGE/'Build_All.cmd',make_root_cmd())
